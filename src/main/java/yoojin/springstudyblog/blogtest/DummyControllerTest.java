@@ -1,18 +1,17 @@
 package yoojin.springstudyblog.blogtest;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import yoojin.springstudyblog.model.RoleType;
 import yoojin.springstudyblog.model.User;
 import yoojin.springstudyblog.repository.UserRepository;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -22,6 +21,27 @@ public class DummyControllerTest {
     @Autowired //이 객체가 메모리에 올라갈 때 UserRepository도 같이 올라감
                 //의존성 주입(DI)
     private UserRepository userRepository;
+
+    @Transactional  //함수 종료시 자동 커밋 => 영속성 컨텍스트에 저장되어 있는 영속화된 데이터를 저장소에 반영
+    @PutMapping("/dummy/user/{id}")
+    public User updateUser(@PathVariable int id, @RequestBody User requestUser) { //json -> java.Object 변환 (MessageConverter의 Jackson 라이브러리)
+        System.out.println("id: "+id);
+        System.out.println("pw: "+requestUser.getPassword());
+        System.out.println("email: "+requestUser.getEmail());
+
+        User user = userRepository.findById(id).orElseThrow(()->{
+            return new IllegalArgumentException("수정에 실패하였습니다.");
+        });
+
+        user.setPassword(requestUser.getPassword());
+        user.setEmail(requestUser.getEmail());
+
+        //더티 체킹
+        //영속화된 데이터에 변경이 감지되면 DB를 수정함.
+
+       //userRepository.save(requestUser);
+        return null;
+    }
 
     @GetMapping("/dummy/users")
     public List<User> list() {
