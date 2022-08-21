@@ -2,6 +2,7 @@ package yoojin.springstudyblog.blogtest;
 
 import ch.qos.logback.core.net.SyslogOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,6 +23,17 @@ public class DummyControllerTest {
                 //의존성 주입(DI)
     private UserRepository userRepository;
 
+    @DeleteMapping("/dummy/user/{id}")
+    public String deleteUser(@PathVariable int id) {
+        try {
+            userRepository.deleteById(id);
+        }catch(EmptyResultDataAccessException e) {
+            return "삭제에 실패하였습니다. 해당 id는 DB에 없습니다";
+        }
+        return "삭제되었습니다. id : "+id;
+    }
+
+
     @Transactional  //함수 종료시 자동 커밋 => 영속성 컨텍스트에 저장되어 있는 영속화된 데이터를 저장소에 반영
     @PutMapping("/dummy/user/{id}")
     public User updateUser(@PathVariable int id, @RequestBody User requestUser) { //json -> java.Object 변환 (MessageConverter의 Jackson 라이브러리)
@@ -40,7 +52,7 @@ public class DummyControllerTest {
         //영속화된 데이터에 변경이 감지되면 DB를 수정함.
 
        //userRepository.save(requestUser);
-        return null;
+        return user;
     }
 
     @GetMapping("/dummy/users")
